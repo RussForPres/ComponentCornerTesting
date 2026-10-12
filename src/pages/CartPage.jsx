@@ -1,22 +1,45 @@
+
 import CartItem from "../components/CartItem";
 
 function CartPage({ cart, removeFromCart }) {
-  const cartTotal = cart.reduce((total, item) => total + item.price, 0);
+  // Group identical products together
+  const groupedCart = cart.reduce((groups, item) => {
+    const existingItem = groups.find(
+      (group) => group.id === item.id
+    );
+
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      groups.push({ ...item, quantity: 1 });
+    }
+
+    return groups;
+  }, []);
+
+  // Calculate total using quantity
+  const cartTotal = groupedCart.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
 
   return (
     <section className="cart-section">
       <h1>Shopping Cart</h1>
 
-      {cart.length === 0 ? (
+      {groupedCart.length === 0 ? (
         <p>Your cart is empty.</p>
       ) : (
         <>
-          {cart.map((item, index) => (
+          {groupedCart.map((item) => (
             <CartItem
-              key={index}
+              key={item.id}
               name={item.name}
               price={item.price}
-              onRemove={() => removeFromCart(index)}
+              quantity={item.quantity}
+              onRemove={() => removeFromCart(
+                cart.findIndex((cartItem) => cartItem.id === item.id)
+              )}
             />
           ))}
 
